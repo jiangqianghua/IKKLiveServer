@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 配置日志输出 -->
+<configuration>
+	<!-- 配置控制台日志 -->
+	<appender name="consoleLog" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<!-- 配置文件输出格式 -->
+			<pattern>
+				%d - %msg%n  
+			</pattern>
+		</layout>
+	</appender>
+	<!-- 配置文件输出 -->
+	<appender name="fileInfoLog" class='ch.qos.logback.core.rolling.RollingFileAppender'>
+		<!-- 控制该处不显示ERROR日志 -->
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>ERROR</level>
+			<onMatch>DENY</onMatch>
+			<onMismatch>ACCEPT</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>
+				%d - %msg%n
+			</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>/Users/jiangqianghua/Documents/workspace/wxshop/src/main/log/info.%d.log</fileNamePattern>
+		</rollingPolicy>
+	</appender>
+	<!-- 存放error的文件 -->
+	<appender name="fileErrorLog" class='ch.qos.logback.core.rolling.RollingFileAppender'>
+		<!--  过滤只显示ERROR日志 -->
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>ERROR</level>
+		</filter>
+		<encoder>
+			<pattern>
+				%d - %msg%n
+			</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>/Users/jiangqianghua/Documents/workspace/wxshop/src/main/log/error.%d.log</fileNamePattern>
+		</rollingPolicy>
+	</appender>
+	<!-- root 全局配置日志信息 -->
+	<root level="info">
+		<appender-ref ref="consoleLog" />
+		<appender-ref ref="fileInfoLog" />
+		<appender-ref ref="fileErrorLog" />
+	</root>
+</configuration>

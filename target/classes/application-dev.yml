@@ -1,0 +1,19 @@
+# 开发环境
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 111111
+    url: jdbc:mysql://127.0.0.1:3306/kkdb?characterEncoding=utf-8&useSSL=false
+    #sudo mysql -h 192.168.1.102 -u root -p
+  jpa:
+    show-sql:true # 打印日志
+  redis:
+    host: 127.0.0.1
+    port: 6379
+server:
+  context-path: /im   #url的前缀
+  port: 8086
+  session-timeout: 30  
+  tomcat.max-threads: 0  
+  tomcat.uri-encoding: UTF-8
