@@ -12,7 +12,7 @@ spring:
     host: 127.0.0.1
     port: 6379
 server:
-  context-path: /im   #url的前缀
+  context-path: /live   #url的前缀
   port: 8086
   session-timeout: 30  
   tomcat.max-threads: 0  

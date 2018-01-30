@@ -18,7 +18,7 @@ public class UploadController {
      * @param name
      * @return
      */
-    @RequestMapping(value="header",method= RequestMethod.POST)
+    @RequestMapping(value="img",method= RequestMethod.POST)
     public ResultVo uploadHeader(@RequestParam("file") MultipartFile file,
                                       @RequestParam("name") String name){
         String contentType = file.getContentType();

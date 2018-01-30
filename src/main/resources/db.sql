@@ -16,3 +16,14 @@ CREATE TABLE `user_profile`(
      primary key(`user_account`)
  ) comment '用户信息表';
 
+
+CREATE TABLE  `room_info`(
+    `room_id` int not nuLL auto_increment comment '房间号',
+    `user_id` varchar(64) not null comment '用户id',
+    `user_name` varchar(64) default '' comment '用户名称',
+    `user_avater` varchar(512) default '' comment '头像',
+    `live_cover` varchar(512) default '' comment '直播封面',
+    `live_title` varchar(512) not null comment '房间主题',
+    `watcher_num` int not null default 0 comment '观看人数',
+    primary key(`room_id`)
+)comment '房间信息表';
