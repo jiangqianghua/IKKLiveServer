@@ -1,11 +1,9 @@
-package com.jiang.im.service;
+package com.jiang.im.im;
 
 import com.jiang.im.dataobject.RoomInfo;
 import com.jiang.im.dataobject.UserProfile;
 import com.jiang.im.repository.RoomInfoRepository;
 import com.jiang.im.repository.UserProfileRepository;
-import com.jiang.im.im.RoomMap;
-import com.jiang.im.im.WatcherInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -22,9 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-//@Component
+@Component
 //@ServerEndpoint(value="/imService",encoders = {MsgEncoder.class},decoders = {MsgDecoder.class})
-//@ServerEndpoint(value="/imService/{roomid}/{userid}/{name}")
+@ServerEndpoint(value="/imService/{roomid}/{info}")
 public class IMService {
 
     public static final int USER_TYPE_HOST = 1 ;
@@ -34,20 +32,18 @@ public class IMService {
 
     private Session session ;
 
-    private static CopyOnWriteArraySet<IMService> imServiceSet = new CopyOnWriteArraySet<>();
+    //private static CopyOnWriteArraySet<IMService> imServiceSet = new CopyOnWriteArraySet<>();
 
-    //private static Map<String,IMService> userSessionMap = new HashMap<>();
+    private static Map<String,IMService> userSessionMap = new HashMap<>();
 
-    private static Map<String,Map<String,IMService>> roomIMServerMap = new HashMap<>();
-    @Autowired
-    UserProfileRepository userProfileRepository ;
-
-    @Autowired
-    RoomInfoRepository roomInfoRepository ;
+    private static Map<String,Map<String, IMService>> roomIMServerMap = new HashMap<>();
 
     private String roomId ;
     private String userId;
     private int userType = USER_TYPE_HOST;
+    private String name ;
+    private String avatar;
+
 
     public String getRoomId() {
         return roomId;
@@ -65,49 +61,59 @@ public class IMService {
         this.userId = userId;
     }
 
+    public int getUserType() {
+        return userType;
+    }
+
+    public void setUserType(int userType) {
+        this.userType = userType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
     @OnOpen
-    public void onOpen(Session session, @PathParam(value = "roomid") String roomId, @PathParam(value="userid")String userId){
+    public void onOpen(Session session, @PathParam(value = "roomid") String roomId, @PathParam(value="info")String info){
         this.session = session;
-        imServiceSet.add(this);
-        logger.info("[IMService] new connect, all counts:{}",imServiceSet.size());
-        logger.info("roomid:{},userid:{}",roomId,userId);
-
         this.roomId = roomId ;
-        this.userId = userId ;
-        WatcherInfo watcherInfo = new WatcherInfo();
-        UserProfile userProfile = userProfileRepository.findOne(userId);
-        BeanUtils.copyProperties(userProfile,watcherInfo);
-        RoomMap.getInstance().joinRoom(roomId,watcherInfo);
+        String infoStr = IMUtils.decode(info);
 
-        RoomInfo roomInfo =roomInfoRepository.findByRoomIdAndUserId(roomId,userId);
-        if(roomInfo != null){
-            userType = USER_TYPE_HOST ;
-        }
+        this.userId = IMUtils.parse(infoStr,IMUtils.USERID) ;
+        this.name = IMUtils.parse(infoStr,IMUtils.NAME);
+        this.avatar = IMUtils.parse(infoStr,IMUtils.AVATAR);
+        this.userType = Integer.parseInt(IMUtils.parse(infoStr,IMUtils.USERTYPE));
+        logger.info("roomid:{},userid:{} come in",roomId,userId);
         if(roomIMServerMap.containsKey(roomId)){
-            Map<String,IMService> userSession = roomIMServerMap.get(roomId);
+            Map<String, IMService> userSession = roomIMServerMap.get(roomId);
             userSession.put(userId,this);
         }
         else{
-            Map<String,IMService> userSession = new HashMap<>();
+            Map<String, IMService> userSession = new HashMap<>();
             userSession.put(userId,this);
             roomIMServerMap.put(roomId,userSession);
         }
 
-        notifyRoomMsg(watcherInfo.getUserNick()+"进入教室");
+        notifyRoomMsg(name+"进入教室");
 
     }
 
     @OnClose
     public void onClose(){
-        imServiceSet.remove(this);
-        logger.info("[IMService] disconnect, all counts:{}",imServiceSet.size());
-        RoomMap.getInstance().leaveRoom(roomId,userId);
-        if(roomIMServerMap.containsKey(roomId)){
-            Map<String,IMService> userSession = roomIMServerMap.get(roomId);
-            userSession.remove(userId);
-        }
-        WatcherInfo watcherInfo = RoomMap.getInstance().getWatcherInfo(roomId,userId);
-        notifyRoomMsg(watcherInfo.getUserNick()+"离开教室");
+        //logger.info("[IMService] disconnect, all counts:{}",imServiceSet.size());
+        notifyRoomMsg(name+"离开教室");
 
     }
 
@@ -126,16 +132,15 @@ public class IMService {
 
     @OnMessage
     public void onMessage(String msg,Session session){
-        WatcherInfo watcherInfo = RoomMap.getInstance().getWatcherInfo(roomId,userId);
-        notifyRoomMsg(watcherInfo.getUserNick()+"说:"+msg);
+        notifyRoomMsg(name+"说:"+msg);
     }
 
 
     public void notifyRoomMsg(String msg){
         // 通知其他人，我进入房间
-        Map<String,IMService> userSession = roomIMServerMap.get(roomId);
+        Map<String, IMService> userSession = roomIMServerMap.get(roomId);
         if(userSession != null){
-            for(Map.Entry<String,IMService> entry:userSession.entrySet()){
+            for(Map.Entry<String, IMService> entry:userSession.entrySet()){
                 IMService imService = entry.getValue();
                 imService.sendMessage(msg);
             }

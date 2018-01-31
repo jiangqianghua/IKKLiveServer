@@ -4,4 +4,6 @@ import com.jiang.im.dataobject.RoomInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RoomInfoRepository extends JpaRepository<RoomInfo,Integer>{
+
+    RoomInfo findByRoomIdAndUserId(String roomId, String userId);
 }
