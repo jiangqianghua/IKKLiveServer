@@ -24,7 +24,7 @@ public class UploadController {
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
         name += ".jpg" ;
-        String fileUrl = "http://192.168.1.102:8080/headers/"+name;
+        String fileUrl = "http://192.168.1.103:8080/headers/"+name;
         String filePath = "/Users/jiangqianghua/Downloads/apache-tomcat-7.0.75/webapps/headers/";
         try {
             FileUtil.uploadFile(file.getBytes(), filePath, name);

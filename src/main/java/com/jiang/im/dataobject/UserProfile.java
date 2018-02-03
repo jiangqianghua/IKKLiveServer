@@ -29,6 +29,8 @@ public class UserProfile {
 
     private String userHeader ="";
 
+    private int exp ;
+
     public String getUserAccount() {
         return userAccount;
     }
@@ -117,19 +119,29 @@ public class UserProfile {
         this.userHeader = userHeader;
     }
 
+    public int getExp() {
+        return exp;
+    }
+
+    public void setExp(int exp) {
+        this.exp = exp;
+    }
+
     @Override
     public String toString() {
         return "UserProfile{" +
                 "userAccount='" + userAccount + '\'' +
                 ", userPassword='" + userPassword + '\'' +
                 ", userNick='" + userNick + '\'' +
-                ", userGender=" + userGender +
-                ", userSigin='" + userSign + '\'' +
+                ", userGender='" + userGender + '\'' +
+                ", userSign='" + userSign + '\'' +
                 ", userRenzheng='" + userRenzheng + '\'' +
                 ", userLocation='" + userLocation + '\'' +
-                ", userLevel='" + userLevel + '\'' +
+                ", userLevel=" + userLevel +
                 ", userGetnum=" + userGetnum +
                 ", userSendnum=" + userSendnum +
+                ", userHeader='" + userHeader + '\'' +
+                ", exp=" + exp +
                 '}';
     }
 }

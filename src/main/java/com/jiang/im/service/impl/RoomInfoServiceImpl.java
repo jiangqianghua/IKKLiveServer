@@ -22,4 +22,9 @@ public class RoomInfoServiceImpl implements RoomInfoService {
         Page<RoomInfo> roomInfoPage = repository.findAll(pageable);
         return roomInfoPage;
     }
+
+    @Override
+    public RoomInfo findOne(int roomId) {
+        return repository.findOne(roomId);
+    }
 }

@@ -9,6 +9,7 @@ public enum ResultEnum {
     USER_EXISTS(-104,"用户已经存在"),
     USER_REGISTER_ERROR(-105,"用户注册失败"),
     USER_UPDATE_ERR(-106,"用户更新失败"),
+    ROOM_NOT_FOUND(-201,"房间不存在"),
     ;
     private Integer code ;
     private String message ;

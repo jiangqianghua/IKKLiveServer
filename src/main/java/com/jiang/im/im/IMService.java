@@ -22,79 +22,23 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 @Component
 //@ServerEndpoint(value="/imService",encoders = {MsgEncoder.class},decoders = {MsgDecoder.class})
-@ServerEndpoint(value="/imService/{roomid}/{info}")
+@ServerEndpoint(value="/imService/{roomId}/{userId}")
 public class IMService {
-
-    public static final int USER_TYPE_HOST = 1 ;
-
-    public static final int USER_TYPE_GUEST = 2 ;
     private static Logger logger = LoggerFactory.getLogger(IMService.class);
 
     private Session session ;
-
-    //private static CopyOnWriteArraySet<IMService> imServiceSet = new CopyOnWriteArraySet<>();
-
-    private static Map<String,IMService> userSessionMap = new HashMap<>();
 
     private static Map<String,Map<String, IMService>> roomIMServerMap = new HashMap<>();
 
     private String roomId ;
     private String userId;
-    private int userType = USER_TYPE_HOST;
-    private String name ;
-    private String avatar;
-
-
-    public String getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public int getUserType() {
-        return userType;
-    }
-
-    public void setUserType(int userType) {
-        this.userType = userType;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
-    }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam(value = "roomid") String roomId, @PathParam(value="info")String info){
+    public void onOpen(Session session, @PathParam(value = "roomId") String roomId, @PathParam(value="userId")String userId){
         this.session = session;
         this.roomId = roomId ;
-        String infoStr = IMUtils.decode(info);
+        this.userId = userId ;
 
-        this.userId = IMUtils.parse(infoStr,IMUtils.USERID) ;
-        this.name = IMUtils.parse(infoStr,IMUtils.NAME);
-        this.avatar = IMUtils.parse(infoStr,IMUtils.AVATAR);
-        this.userType = Integer.parseInt(IMUtils.parse(infoStr,IMUtils.USERTYPE));
         logger.info("roomid:{},userid:{} come in",roomId,userId);
         if(roomIMServerMap.containsKey(roomId)){
             Map<String, IMService> userSession = roomIMServerMap.get(roomId);
@@ -106,21 +50,32 @@ public class IMService {
             roomIMServerMap.put(roomId,userSession);
         }
 
-        notifyRoomMsg(name+"进入教室");
+        //notifyRoomMsg(name+"进入教室");
 
     }
 
     @OnClose
     public void onClose(){
         //logger.info("[IMService] disconnect, all counts:{}",imServiceSet.size());
-        notifyRoomMsg(name+"离开教室");
+        //notifyRoomMsg(name+"离开教室");
 
+        Map<String, IMService> userSession = roomIMServerMap.get(roomId);
+        if(userSession != null){
+            for(Map.Entry<String, IMService> entry:userSession.entrySet()){
+                IMService imService = entry.getValue();
+                if(imService != null && imService.userId.equals(this.userId)){
+                    userSession.remove(entry.getKey());
+                    break;
+                }
+            }
+        }
     }
 
-//    @OnMessage
-//    public void onMessage(MsgData msg){
-//        logger.info("[IMService] recevier msg:{}",msg.getMsg());
-//    }
+
+    @OnMessage
+    public void onMessage(String msg,Session session){
+        notifyRoomMsg(msg);
+    }
 
     public void sendMessage(String msg){
         try {
@@ -129,12 +84,6 @@ public class IMService {
             e.printStackTrace();
         }
     }
-
-    @OnMessage
-    public void onMessage(String msg,Session session){
-        notifyRoomMsg(name+"说:"+msg);
-    }
-
 
     public void notifyRoomMsg(String msg){
         // 通知其他人，我进入房间

@@ -10,4 +10,6 @@ public interface RoomInfoService {
 
     Page<RoomInfo> findList(Pageable pageable);
 
+    RoomInfo findOne(int roomId);
+
 }

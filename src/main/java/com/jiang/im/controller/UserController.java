@@ -3,10 +3,13 @@ package com.jiang.im.controller;
 import com.jiang.im.check.LoginCheck;
 import com.jiang.im.constant.CookieConstant;
 import com.jiang.im.constant.RedisConstant;
+import com.jiang.im.dataobject.RoomInfo;
 import com.jiang.im.dataobject.UserProfile;
+import com.jiang.im.entity.GiftInfo;
 import com.jiang.im.enums.ResultEnum;
 import com.jiang.im.exception.LiveException;
 import com.jiang.im.form.UserProfileForm;
+import com.jiang.im.service.RoomInfoService;
 import com.jiang.im.service.UserService;
 import com.jiang.im.utils.CookieUtil;
 import com.jiang.im.utils.CryptoUtils;
@@ -32,6 +35,9 @@ public class UserController {
 
     @Autowired
     private UserService userService ;
+
+    @Autowired
+    private RoomInfoService roomInfoService ;
 
     @Autowired
     private StringRedisTemplate redisTemplate ;
@@ -160,7 +166,7 @@ public class UserController {
             String redisKey = String.format(RedisConstant.TOKEN_PREFIX,account,mac);
             // 清空redis对应的缓存
             redisTemplate.opsForValue().getOperations().delete(redisKey);
-            return ResultVOUtil.error(ResultEnum.USER_EXPIRE);
+            return ResultVOUtil.success();
         }catch (LiveException e){
             return ResultVOUtil.error(e.getCode(),e.getMessage());
         } catch (Exception e){
@@ -190,6 +196,41 @@ public class UserController {
 
         userService.save(userProfile);
 
+        return ResultVOUtil.success();
+    }
+
+    /**
+     * 发送礼物
+     * @return
+     */
+    @PostMapping("/sendgift")
+    public ResultVo sendGift(@RequestParam(value = "roomId") int roomId,
+                             @RequestParam(value = "sendUserId") String sendUserId,
+                             @RequestParam(value = "giftId") int giftId,
+                             @RequestParam(value = "num") int num){
+        // 查找房间
+        RoomInfo roomInfo = roomInfoService.findOne(roomId);
+        if(roomInfo == null)
+            return ResultVOUtil.error(ResultEnum.ROOM_NOT_FOUND);
+        // 获取主播的信息
+        UserProfile userProfile =  userService.findOne(roomInfo.getUserId());
+        if(userProfile == null)
+            return ResultVOUtil.error(ResultEnum.USER_NOT_FOUND);
+        // 更新主播的数据
+        userProfile.setUserGetnum(userProfile.getUserGetnum()+num);
+        userService.save(userProfile);
+        // 更新发送礼物的数据
+        UserProfile sendUserProfile = userService.findOne(sendUserId);
+        if(sendUserProfile == null)
+            return ResultVOUtil.error(ResultEnum.USER_NOT_FOUND);
+        // 更新发送者经验值
+        sendUserProfile.setUserSendnum(sendUserProfile.getUserSendnum() + num);
+        GiftInfo giftInfo = GiftInfo.getGiftById(giftId);
+        sendUserProfile.setExp(sendUserProfile.getExp() + giftInfo.expValue*num);
+        // 计算用户等级
+        sendUserProfile.setUserLevel(sendUserProfile.getExp()/200 + 1);
+        // 更新用户
+        userService.save(sendUserProfile);
         return ResultVOUtil.success();
     }
 

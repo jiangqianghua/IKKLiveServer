@@ -13,6 +13,7 @@ CREATE TABLE `user_profile`(
     `user_level` int default 0 comment '等级',
     `user_getnum` int default 0 comment '获取票数',
     `user_sendnum` int default 0 comment '送出票数',
+    `exp` int default 0 comment '经验值',
      primary key(`user_account`)
  ) comment '用户信息表';
 
