@@ -6,7 +6,7 @@ public class UserSession {
 
     private Session session ;
 
-    private String userId ;
+    private String customParam ;
 
     public Session getSession() {
         return session;
@@ -16,11 +16,11 @@ public class UserSession {
         this.session = session;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getCustomParam() {
+        return customParam;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setCustomParam(String customParam) {
+        this.customParam = customParam;
     }
 }

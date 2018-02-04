@@ -24,13 +24,14 @@ import java.util.concurrent.CopyOnWriteArraySet;
 //MyEndpointConfigure 使用了这个类，websocket就归纳到类spring管理，websocket对象只有一个
 @Component
 //@ServerEndpoint(value="/imService",encoders = {MsgEncoder.class},decoders = {MsgDecoder.class})
-@ServerEndpoint(value="/imService/{roomId}/{userId}",configurator=MyEndpointConfigure.class)
+@ServerEndpoint(value="/imService/{roomId}/{userId}/{customParams}",configurator=MyEndpointConfigure.class)
 public class IMService {
     private static Logger logger = LoggerFactory.getLogger(IMService.class);
 
     private static Map<String,Map<String, UserSession>> roomIMServerMap = new HashMap<>();
 
     private static Map<String,String> sessionIdRoomMap = new HashMap<String,String>();
+
     @Autowired
     RoomInfoRepository roomInfoRepository;
 
@@ -39,13 +40,16 @@ public class IMService {
 
 
     @OnOpen
-    public void onOpen(Session session, @PathParam(value = "roomId") String roomId, @PathParam(value="userId")String userId){
+    public void onOpen(Session session, @PathParam(value = "roomId") String roomId,
+                       @PathParam(value = "userId")String userId,
+                       @PathParam(value="customParams")String customParams){
         sessionIdRoomMap.put(session.getId(),roomId);
         logger.info("roomid:{},userid:{} come in",roomId,userId);
         Map<String, UserSession> userSessionMap = null;
         UserSession userSession = new UserSession();
         userSession.setSession(session);
-        userSession.setUserId(userId);
+        String jsonParams = IMUtils.decode(customParams);
+        userSession.setCustomParam(jsonParams);
         if(roomIMServerMap.containsKey(roomId)){
             userSessionMap = roomIMServerMap.get(roomId);
             userSessionMap.put(userId,userSession);
@@ -56,6 +60,14 @@ public class IMService {
             userSessionMap.put(userId,userSession);
             roomIMServerMap.put(roomId,userSessionMap);
         }
+
+        //通知其他人，我进来了
+        String json = IMUtils.createEnterRoomCmd(jsonParams);
+        notifyRoomMsg(json,session.getId());
+
+        // 通知改用户房间有多少人
+        notifyUserList(roomId,session);
+        // 更新数据库
         updateRoomInfo(session.getId());
     }
 
@@ -68,23 +80,22 @@ public class IMService {
         else
             return ;
 
-        String userId  = null ;
+        String extendParams  = null ;
         userSessionMap = roomIMServerMap.get(roomId);
         if(userSessionMap != null){
             for(Map.Entry<String, UserSession> entry:userSessionMap.entrySet()){
                 UserSession userSession = entry.getValue();
                 if(userSession != null && userSession.getSession().getId().equals(session.getId())){
-                    userId = userSession.getUserId();
+                    extendParams = userSession.getCustomParam();
                     userSessionMap.remove(entry.getKey());
                     break;
                 }
             }
         }
-        if(userId == null)
+        if(extendParams == null)
             return ;
         //通知其他人，我离开了
-        String json = "{\"account\":\"%s\",\"content\":\"离开了\",\"header\":\"\",\"nickName\":\"\",\"msgType\":1,\"level\":0}";
-        json = String.format(json,userId);
+        String json = IMUtils.createLeaveRoomCmd(extendParams);
         notifyRoomMsg(json,session.getId());
         updateRoomInfo(session.getId());
     }
@@ -138,6 +149,20 @@ public class IMService {
                     roomInfo.setWatcherNum(userSessionMap.size());
                 }
                 roomInfoRepository.save(roomInfo);
+            }
+        }
+    }
+
+    private void notifyUserList(String roomId,Session session){
+        Map<String, UserSession> userSessionMap = null ;
+        if(roomIMServerMap.containsKey(roomId)){
+            userSessionMap = roomIMServerMap.get(roomId);
+            if(userSessionMap != null){
+                for(Map.Entry<String, UserSession> entry:userSessionMap.entrySet()){
+                    UserSession userSession  = entry.getValue();
+                    String json = IMUtils.createUserInRoomCmd(userSession.getCustomParam());
+                    sendMessage(session,json);
+                }
             }
         }
     }
