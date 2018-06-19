@@ -28,3 +28,11 @@ CREATE TABLE  `room_info`(
     `watcher_num` int not null default 0 comment '观看人数',
     primary key(`room_id`)
 )comment '房间信息表';
+
+CREATE TABLE `gift_info`(
+    `gift_id` int not null auto_increment comment '礼物id',
+    `gift_name` varchar(64) not null comment '礼物名称',
+    `gift_exp` int not null default 0 comment '礼物金额',
+    `gift_type` int not null default 0 comment '礼物类型 0 连发礼物 1全屏礼物',
+    `gift_url` varchar(512) not null default 0 '礼物图片链接'
+)comment '礼物信息';
