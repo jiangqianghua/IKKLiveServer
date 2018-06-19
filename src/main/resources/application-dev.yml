@@ -1,4 +1,13 @@
 # 开发环境
+server:
+  context-path: /live   #url的前缀
+  port: 8086
+  session-timeout: 30  
+  tomcat.max-threads: 0  
+  tomcat.uri-encoding: UTF-8
+  #uploadaddr: 127.0.0.1:8080
+  assert-avater: /Users/jiangqianghua/Downloads/apache-tomcat-7.0.75/webapps/ikkspace/
+
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
@@ -11,10 +20,5 @@ spring:
   redis:
     host: 127.0.0.1
     port: 6379
-server:
-  context-path: /live   #url的前缀
-  port: 8086
-  session-timeout: 30  
-  tomcat.max-threads: 0  
-  tomcat.uri-encoding: UTF-8
-  uploadaddr: 127.0.0.1:8080
+  resources:
+    static-locations: classpath:/META-INF/resources/,classpath:/resources/, classpath:/static/, classpath:/public/, file:${server.assert-avater}

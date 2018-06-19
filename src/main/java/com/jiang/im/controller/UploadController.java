@@ -14,8 +14,11 @@ import java.io.IOException;
 @RequestMapping("/upload")
 public class UploadController {
 
-    @Value("${server.uploadaddr}")
-    private String uploadAddr ;
+//    @Value("${server.uploadaddr}")
+//    private String uploadAddr ;
+
+    @Value("${server.assert-avater}")
+    private String avaterPath ;
     /**
      * 单文件上传
      * @param file
@@ -28,8 +31,9 @@ public class UploadController {
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
         name += ".jpg" ;
-        String fileUrl = "http://"+uploadAddr+"/headers/"+name;
-        String filePath = "/Users/jiangqianghua/Downloads/apache-tomcat-7.0.75/webapps/headers/";
+       // String fileUrl = "http://"+uploadAddr+"/headers/"+name;
+        String filePath = avaterPath+"headers/";
+        String dbPath = "headers/" +name ;
         try {
             FileUtil.uploadFile(file.getBytes(), filePath, name);
         } catch (IOException e) {
@@ -39,7 +43,35 @@ public class UploadController {
             e.printStackTrace();
             return ResultVOUtil.success(e.getMessage());
         }
-        return ResultVOUtil.success(fileUrl);
+        return ResultVOUtil.success(dbPath);
+    }
+
+
+    /**
+     * 单文件上传 废弃
+     * @param file
+     * @param name
+     * @return
+     */
+    @RequestMapping(value="poster",method= RequestMethod.POST)
+    public ResultVo uploadPoster(@RequestParam("file") MultipartFile file,
+                                 @RequestParam("name") String name){
+        String contentType = file.getContentType();
+        String fileName = file.getOriginalFilename();
+        name += ".jpg" ;
+        // String fileUrl = "http://"+uploadAddr+"/headers/"+name;
+        String filePath = avaterPath+"headers/";
+        String dbPath = avaterPath +name ;
+        try {
+            FileUtil.uploadFile(file.getBytes(), filePath, name);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResultVOUtil.success(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResultVOUtil.success(e.getMessage());
+        }
+        return ResultVOUtil.success(dbPath);
     }
 
 }
